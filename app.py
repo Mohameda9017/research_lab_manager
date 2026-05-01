@@ -15,7 +15,7 @@ def query_all_members():
         SELECT Member_ID, Member_Name, Join_Date, Member_Type
         FROM LAB_MEMBER; """)
     
-    results = cursor.fetchall() # this gets all the results from the query. stored in a list of tuples, where each tuple is a result. 
+    results = cursor.fetchall() # this gets all the results from the query. stored in a list of tuples, where each tuple is a result.
 
     print("\n--- All Lab Members ---")
     for row in results: 
@@ -138,6 +138,36 @@ def show_mentorships_same_project():
 
     conn.close()
 
+def top5projectsbygrant():
+    conn = connect()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+            P.Project_ID,
+            P.Title,
+            G.Budget
+        FROM PROJECT AS P
+        JOIN GRANT_INFO AS G
+            ON P.Project_ID = G.Project_ID
+        ORDER BY G.BUDGET DESC
+        LIMIT 5;
+    """)
+    results = cursor.fetchall()
+
+    if results:
+        print("\n--- Top 5 projects by grant ---")
+        for row in results:
+            print(
+                f"Project ID: {row[0]} | "
+                f"Project: {row[1]} | "
+                f"Budget: {row[2]}"
+            )
+    else:
+        print("No mentorship relations found among members on the same project.")
+
+    conn.close()
+
 
 # displays project member menu
 def project_member_menu():
@@ -166,7 +196,38 @@ def project_member_menu():
             break
         else:
             print("Enter a valid choice.")
+def grantpublication_reporting_menu():
+    while True:
+        print("\n--- Grant and Publication Reporting ---")
+        print("1. List top 5 projects")
+        '''
+        List the top 5 projects ranked by their total grant funding, and show the total
+        amount each project received, in decreasing order of total funding (assume
+        Budget is the dollar amount of each grant).
+        '''
+        print("2. Find the Mentor whos mentees produced the most publications")
+        #self explanitory
+        print("3. Calculate total number of student publications per major and per publications")
+        #self explanitory
+        print("4. Find projects that ended before date X and the number of grants that funded each project")
 
+        print("5. Find the three most productive years in terms of publications produced by students")
+        print("6. Back to main menu")
+        choice = input("Choose an Option: ")
+        if choice == "1":
+            top5projectsbygrant()
+        elif choice == "2":
+            break
+        elif choice == '3':
+            break
+        elif choice == '4':
+            break
+        elif choice == '5':
+            break
+        elif choice == "6":
+            break
+        else:
+            print("Enter a valid choice.")
 def main_menu():
     while True:
         print("\n===== Research Lab Manager =====")
@@ -180,6 +241,8 @@ def main_menu():
         elif choice == 2:
             display_project_status()
         elif choice == 3:
+            grantpublication_reporting_menu()
+        elif choice == 4:
             print("bye")
             break
         else:
