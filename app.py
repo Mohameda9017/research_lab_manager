@@ -164,12 +164,185 @@ def top5projectsbygrant():
                 f"Budget: {row[2]}"
             )
     else:
-        print("No mentorship relations found among members on the same project.")
+        print("No projects found")
 
     conn.close()
 
+def mentormostpublication():
+    conn = connect()
+    cursor = conn.cursor()
+    cursor.execute("""SELECT L1.Member_ID, L1.Member_Name FROM LAB_MEMBER as L1 WHERE Member_ID=(SELECT L.Mentor_MID
+    from LAB_MEMBER AS L
+    JOIN PUBLISH AS P
+        ON L.Member_ID = P.Member_ID
+    where L.Mentor_MID IS NOT Null
+    group by L.Mentor_MID
+    ORDER BY count(Distinct L.Mentor_MID) ASC
+    LIMIT 1);
+    """)#me crying while im trying to figure this out
+    results = cursor.fetchall()
 
+    if results:
+        print("\n--- Mentor who mentees produced the most publication  ---")
+        for row in results:
+            print(
+                f"Member ID: {row[0]} | "
+                f"Member_name: {row[1]} | "
+            )
+    else:
+        print("No projects found")
+
+    conn.close()
+def tspbymajor():
+    conn = connect()
+    cursor = conn.cursor()
+    cursor.execute("""SELECT S.Major, COUNT( p.PubID)
+    FROM STUDENT as S
+    left join PUBLISH p
+        on S.Member_ID = p.Member_ID
+    Group By S.Major;
+    """)
+    results = cursor.fetchall()
+    if results:
+        print("\n--- Toal projects by major ---")
+        for row in results:
+            print(
+                f"Major: {row[0]} | "
+                f"Publication Count: {row[1]} | "
+            )
+    else:
+        print("No projects found")
+
+    conn.close()
+
+def tspbyyear():
+    conn = connect()
+    cursor = conn.cursor()
+    cursor.execute("""SELECT pub.Pub_Year, COUNT(Distinct p.PubID)
+    FROM STUDENT as S
+    right join PUBLISH p
+        on S.Member_ID = p.Member_ID
+    right join PUBLICATION pub
+        on p.PubID=pub.PubID
+    Group By pub.Pub_Year;
+    """)
+    #I need to join this with students since it'll get all STUDENT publications
+    results = cursor.fetchall()
+    if results:
+        print("\n--- Toal projects by major ---")
+        for row in results:
+            print(
+                f"Year: {row[0]} | "
+                f"Publication Count: {row[1]} | "
+            )
+    else:
+        print("No projects found")
+
+    conn.close()
+
+def projectsbeforex(date):
+    conn = connect()
+    cursor = conn.cursor()
+    cursor.execute("""SELECT * FROM PROJECT  WHERE End_Date<?""",(date,))
+    results = cursor.fetchall()
+    if results:
+        print("\n--- Projects before",date, "---")
+        for row in results:
+            print(
+                f"Project ID: {row[0]} | "
+                f"Title: {row[1]} | "
+                f"Start Date: {row[2]} | "
+                f"End Date: {row[3]} | "
+                f"Project Duration: {row[4]} | "
+                f"Project Status: {row[5]} | "
+                f"Project Lead: {row[6]} | "
+
+            )
+    else:
+        print("No projects found")
+
+    conn.close()
+def projectsfundedby(date):
+    conn = connect()
+    cursor = conn.cursor()
+    cursor.execute("""SELECT * FROM PROJECT AS P
+    JOIN GRANT_INFO AS G
+        ON  P.Project_ID=G.Project_ID
+    WHERE End_Date<?""",(date,))
+    results = cursor.fetchall()
+    if results:
+        print("\n--- projects before",date," with grants ---")
+        for row in results:
+            print(
+                f"Project ID: {row[0]} | "
+                f"Title: {row[1]} | "
+                f"Start Date: {row[2]} | "
+                f"End Date: {row[3]} | "
+                f"Project Duration: {row[4]} | "
+                f"Project Status: {row[5]} | "
+                f"Project Lead: {row[6]} | "
+                f"Grant ID: {row[7]} | "
+                f"Budget: {row[8]} | "
+                f"Agency: {row[11]} | "
+
+            )
+    else:
+        print("No projects found")
+
+    conn.close()
+def projectswithxdate():
+    x=None
+    while True:
+        print("\n--- Calculate total number of student publications ---")
+        print("Entered Year is", x)
+        print("1. Find the Projects before the Date ", x)
+        print("2. By Publication year")
+        print("3. Enter Date")
+        print("4. Go back Previous Menu")
+        choice = input("Choose an Option: ")
+        if choice == "1":
+            projectsbeforex(x)
+        elif choice == "2":
+            projectsfundedby(x)
+        elif choice == "3":
+            x = input("What year would you like to enter Format is yyyy-mm-dd")
+        elif choice == "4":
+            break
+        else:
+            print("Enter a valid choice.")
+def totalstudentspublication():
+    while True:
+        print("\n--- Calculate total number of student publications ---")
+        print("1. By Major")
+        print("2. By Publication year")
+        print("3. Go back Previous Menu")
+        choice = input("Choose an Option: ")
+        if choice == "1":
+            tspbymajor()
+        elif choice == "2":
+            tspbyyear()
+        elif choice == "3":
+            break
+        else:
+            print("Enter a valid choice.")
 # displays project member menu
+def threemostprodpubyear():
+    conn = connect()
+    cursor = conn.cursor()
+    cursor.execute("""SELECT Pub_Year,Count(Title) FROM PUBLICATION group by Pub_Year ORDER BY Count(Title) DESC limit 3""")
+    results = cursor.fetchall()
+    if results:
+        print("\n--- top 3 productive years---")
+        for row in results:
+            print(
+                f"Year: {row[0]} | "
+                f"Num of Publication: {row[1]} | "
+
+            )
+    else:
+        print("No projects found")
+
+    conn.close()
 def project_member_menu():
     while True:
         print("\n--- Project and Member Management ---")
@@ -196,6 +369,7 @@ def project_member_menu():
             break
         else:
             print("Enter a valid choice.")
+
 def grantpublication_reporting_menu():
     while True:
         print("\n--- Grant and Publication Reporting ---")
@@ -210,24 +384,25 @@ def grantpublication_reporting_menu():
         print("3. Calculate total number of student publications per major and per publications")
         #self explanitory
         print("4. Find projects that ended before date X and the number of grants that funded each project")
-
+        #Self explanitory
         print("5. Find the three most productive years in terms of publications produced by students")
         print("6. Back to main menu")
         choice = input("Choose an Option: ")
         if choice == "1":
             top5projectsbygrant()
         elif choice == "2":
-            break
+            mentormostpublication()
         elif choice == '3':
-            break
+            totalstudentspublication()
         elif choice == '4':
-            break
+            projectswithxdate()
         elif choice == '5':
-            break
+            threemostprodpubyear()
         elif choice == "6":
             break
         else:
             print("Enter a valid choice.")
+        #very much regret not layering this earlier
 def main_menu():
     while True:
         print("\n===== Research Lab Manager =====")
