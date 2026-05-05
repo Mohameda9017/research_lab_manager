@@ -1,0 +1,66 @@
+import sqlite3
+
+def connect_db():
+    return sqlite3.connect('lab_manager.db')
+
+def menu():
+    print("\n--- RESEARCH LAB: EQUIPMENT TRACKING ---")
+    print("1. View All Equipment Status")
+    print("2. Add New Equipment")
+    print("3. Remove Equipment")
+    print("4. Checkout Equipment (Add Usage)")
+    print("5. Show Current Users & Projects")
+    print("6. Exit")
+    return input("Select an option: ")
+
+def show_status():
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT equipment_id, item_name, status FROM Equipment")
+    for row in cursor.fetchall():
+        print(f"ID: {row[0]} | Item: {row[1]} | Status: {row[2]}")
+    conn.close()
+
+def checkout_equipment():
+    conn = connect_db()
+    cursor = conn.cursor()
+    eq_id = input("Enter Equipment ID: ")
+    mem_id = input("Enter Member ID: ")
+    proj_id = input("Enter Project ID: ")
+    
+    # Update status and log usage
+    cursor.execute("UPDATE Equipment SET status = 'In Use' WHERE equipment_id = ?", (eq_id,))
+    cursor.execute("INSERT INTO UsageTracking (equipment_id, member_id, project_id) VALUES (?, ?, ?)", 
+                   (eq_id, mem_id, proj_id))
+    conn.commit()
+    print("Success: Equipment checked out.")
+    conn.close()
+
+def show_active_usage():
+    conn = connect_db()
+    cursor = conn.cursor()
+    query = """
+        SELECT e.item_name, m.name, p.project_name
+        FROM UsageTracking u
+        JOIN Equipment e ON u.equipment_id = e.equipment_id
+        JOIN Members m ON u.member_id = m.member_id
+        JOIN Projects p ON u.project_id = p.project_id
+        WHERE e.status = 'In Use' AND u.return_time IS NULL
+    """
+    cursor.execute(query)
+    print("\n--- Current Usage ---")
+    for row in cursor.fetchall():
+        print(f"Equipment: {row[0]} | User: {row[1]} | Project: {row[2]}")
+    conn.close()
+
+def main():
+    while True:
+        choice = menu()
+        if choice == '1': show_status()
+        elif choice == '4': checkout_equipment()
+        elif choice == '5': show_active_usage()
+        elif choice == '6': break
+        else: print("Feature coming soon or invalid choice.")
+
+if __name__ == "__main__":
+    main()
