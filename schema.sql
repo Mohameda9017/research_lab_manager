@@ -138,28 +138,28 @@ CREATE TABLE GRANT_INFO (
     PRIMARY KEY (Grant_ID),
     FOREIGN KEY (Project_ID) REFERENCES PROJECT(Project_ID)
 );
-CREATE TABLE Members (
+CREATE TABLE MEMBER (
     member_id INT PRIMARY KEY,
     name VARCHAR(100)
 );
 
-CREATE TABLE Projects (
+CREATE TABLE PROJECT (
     project_id INT PRIMARY KEY,
     project_name VARCHAR(100)
 );
 
-CREATE TABLE Equipment (
+CREATE TABLE EQUIPMENT (
     equipment_id INT PRIMARY KEY,
     item_name VARCHAR(100),
     status VARCHAR(20) DEFAULT 'Available' -- 'In Use'
 );
 
-CREATE TABLE UsageTracking (
+CREATE TABLE IS_USED (
     usage_id SERIAL PRIMARY KEY,
-    equipment_id INT REFERENCES Equipment(equipment_id),
-    member_id INT REFERENCES Members(member_id),
-    project_id INT REFERENCES Projects(project_id),
+    equipment_id INT REFERENCES EQUIPMENT(equipment_id),
+    member_id INT REFERENCES MEMBER(member_id),
+    project_id INT REFERENCES PROJECT(project_id),
     checkout_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     return_time TIMESTAMP,
-    FOREIGN KEY (equipment_id) REFERENCES Equipment(equipment_id)
+    FOREIGN KEY (equipment_id) REFERENCES EQUIPMENT(equipment_id)
 );
